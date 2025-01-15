@@ -4,12 +4,17 @@ from flask_migrate import Migrate
 import pymysql
 from sqlalchemy_utils import database_exists, create_database
 
+# 注册PyMySQL作为MySQL驱动
+pymysql.install_as_MySQLdb()
+
 db = SQLAlchemy()
 migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:123321@localhost/bzero'
+    
+    # 使用pymysql作为MySQL驱动
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123321@localhost/bzero'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # 检查数据库是否存在，不存在则创建

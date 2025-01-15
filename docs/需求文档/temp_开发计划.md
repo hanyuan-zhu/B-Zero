@@ -11,6 +11,21 @@
      - 新增或编辑员工（写入`employees`表）  
      - 生成员工变动记录（写入`employee_changes`表）  
      - 处理搜索、筛选、排序、分页逻辑
+   - 建议的文件结构：
+   app/
+      services/
+         __init__.py
+         employee_service.py
+         department_service.py
+         project_service.py
+         change_record_service.py
+   其中每个服务类都需要：
+      - 异常处理
+      - 输入验证
+      - 数据一致性检查
+      - 关联操作处理（如员工变动同时更新多个相关表）
+      - 事务管理（确保操作的原子性）
+
 
 3. **路由与接口设计**  
    - 在`routes`目录下为“人员信息管理”单独建一个文件（如`routes/personnel_routes.py`）。  
@@ -41,7 +56,6 @@
    - 本地调试通过后，可选择在开发环境或云端（如Heroku、AWS）部署。  
    - 配合Git进行版本管理，确保每次更新都能回溯代码与数据库迁移状态。
 
-通过以上步骤，你可以逐步实现“人员信息管理”及其关键功能，后续再结合其它需求（如考勤、薪资）进行迭代和完善。
 
 
 ---
