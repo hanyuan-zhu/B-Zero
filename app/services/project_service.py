@@ -186,3 +186,40 @@ class ProjectService:
             }
         except SQLAlchemyError as e:
             raise ProjectServiceException(f"数据库错误: {str(e)}")
+
+    def get_project_employees(self, id: int, page: int = 1, limit: int = 10) -> Dict:
+        """获取项目成员列表
+        
+        Args:
+            id: 项目ID
+            page: 页码
+            limit: 每页记录数
+        Returns:
+            Dict: 包含成员列表和分页信息
+        """
+        try:
+            project = self.model.query.get(id)
+            if not project:
+                raise ProjectServiceException(f"项目ID {id} 不存在")
+            
+            # 查询项目下的员工
+            pagination = Employee.query.filter_by(project_id=id).paginate(
+                page=page,
+                per_page=limit,
+                error_out=False
+            )
+            
+            return {
+                'items': [{
+                    'id': emp.id,
+                    'name': emp.name,
+                    'position': emp.position,
+                    'join_date': emp.join_date.strftime('%Y-%m-%d')
+                } for emp in pagination.items],
+                'total': pagination.total,
+                'pages': pagination.pages,
+                'current_page': page
+            }
+            
+        except SQLAlchemyError as e:
+            raise ProjectServiceException(f"数据库错误: {str(e)}")
