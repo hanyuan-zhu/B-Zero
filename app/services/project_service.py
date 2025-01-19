@@ -2,14 +2,14 @@ from typing import Dict, List, Optional
 from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.models import Project, Department, Employee
+from . import BaseService, ServiceException
 
-class ProjectServiceException(Exception):
-    """项目服务异常类"""
+class ProjectServiceException(ServiceException):
     pass
 
-class ProjectService:
+class ProjectService(BaseService):
     def __init__(self):
-        self.model = Project
+        super().__init__(Project)
         
     def _validate_project_data(self, data: Dict) -> None:
         """验证项目数据

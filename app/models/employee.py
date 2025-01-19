@@ -1,5 +1,5 @@
 # app/models/employee.py
-from app import db
+from ..extensions import db
 
 class Employee(db.Model):
     __tablename__ = 'employees'
@@ -12,3 +12,7 @@ class Employee(db.Model):
     status = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+    department = db.relationship('Department', backref='employees')
+    project = db.relationship('Project', backref='employees')
+    change_records = db.relationship('ChangeRecord', backref='employee')
+    

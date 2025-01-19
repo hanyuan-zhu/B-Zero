@@ -1,6 +1,5 @@
-from flask import request
+from flask import request, current_app
 from . import project_bp
-from ..services import project_service
 from ..utils import make_response, handle_exceptions, get_pagination_params
 
 @project_bp.route('/', methods=['GET'])
@@ -10,14 +9,14 @@ def get_projects():
     支持通过department_id参数筛选特定部门的项目
     """
     department_id = request.args.get('department_id', type=int)
-    result = project_service.get_projects(department_id)
+    result = current_app.project_service.get_projects(department_id)
     return make_response(data=result)
 
 @project_bp.route('/<int:id>', methods=['GET'])
 @handle_exceptions
 def get_project(id):
     """获取单个项目详情"""
-    project = project_service.get_project(id)
+    project = current_app.project_service.get_project(id)
     return make_response(data=project)
 
 @project_bp.route('/', methods=['POST'])
@@ -25,7 +24,7 @@ def get_project(id):
 def create_project():
     """创建新项目"""
     data = request.get_json()
-    project = project_service.create_project(data)
+    project = current_app.project_service.create_project(data)
     return make_response(data=project)
 
 @project_bp.route('/<int:id>', methods=['PUT'])
@@ -33,21 +32,21 @@ def create_project():
 def update_project(id):
     """更新项目信息"""
     data = request.get_json()
-    project = project_service.update_project(id, data)
+    project = current_app.project_service.update_project(id, data)
     return make_response(data=project)
 
 @project_bp.route('/<int:id>', methods=['DELETE'])
 @handle_exceptions
 def delete_project(id):
     """删除项目"""
-    project_service.delete_project(id)
+    current_app.project_service.delete_project(id)
     return make_response(data={'id': id})
 
 @project_bp.route('/<int:id>/stats', methods=['GET'])
 @handle_exceptions
 def get_project_stats(id):
     """获取项目统计信息"""
-    stats = project_service.get_project_stats(id)
+    stats = current_app.project_service.get_project_stats(id)
     return make_response(data=stats)
 
 @project_bp.route('/<int:id>/employees', methods=['GET'])
@@ -55,7 +54,7 @@ def get_project_stats(id):
 def get_project_employees(id):
     """获取项目成员列表"""
     params = get_pagination_params()
-    result = project_service.get_project_employees(id, **params)
+    result = current_app.project_service.get_project_employees(id, **params)
     return make_response(
         data=result['items'],
         pagination={

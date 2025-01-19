@@ -1,14 +1,16 @@
 from typing import Dict, List, Optional
 from sqlalchemy.exc import SQLAlchemyError
-from app import db
-from app.models import Department, Employee, Project
+from ..extensions import db
+from ..models import Department
+from app.models import Employee, Project
+from . import BaseService, ServiceException
 
-class DepartmentServiceException(Exception):
+class DepartmentServiceException(ServiceException):
     pass
 
-class DepartmentService:
+class DepartmentService(BaseService):
     def __init__(self):
-        self.model = Department
+        super().__init__(Department)
 
     def _validate_department_data(self, data: Dict) -> None:
         """验证部门数据"""
@@ -17,7 +19,7 @@ class DepartmentService:
         # 检查部门名是否重复
         existing = Department.query.filter_by(name=data['name']).first()
         if existing:
-            raise DepartmentServiceException(f"Department name '{data['name']}' already exists")
+            raise DepartmentServiceException(f"Department name '{data['name']} already exists")
 
     def get_departments(self) -> List[Department]:
         """获取所有部门列表"""
@@ -86,7 +88,7 @@ class DepartmentService:
                 # 检查新名称是否重复
                 existing = Department.query.filter_by(name=data['name']).first()
                 if existing:
-                    raise DepartmentServiceException(f"Department name '{data['name']}' already exists")
+                    raise DepartmentServiceException(f"Department name '{data['name']} already exists")
                 department.name = data['name']
             
             db.session.commit()

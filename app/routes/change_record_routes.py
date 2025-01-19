@@ -1,6 +1,5 @@
-from flask import request
+from flask import request, current_app
 from . import change_record_bp
-from ..services import change_record_service
 from ..utils import make_response, handle_exceptions, get_pagination_params
 
 @change_record_bp.route('/', methods=['GET'])
@@ -19,7 +18,7 @@ def get_change_records():
         } if request.args.get('startDate') or request.args.get('endDate') else None
     }
     
-    result = change_record_service.get_change_records(
+    result = current_app.change_record_service.get_change_records(
         **params,
         **{k: v for k, v in filters.items() if v is not None}
     )
@@ -37,14 +36,14 @@ def get_change_records():
 @handle_exceptions
 def get_change_record(id):
     """获取单个变动记录详情"""
-    record = change_record_service.get_change_record(id)
+    record = current_app.change_record_service.get_change_record(id)
     return make_response(data=record)
 
 @change_record_bp.route('/<int:id>/confirm', methods=['POST'])
 @handle_exceptions
 def confirm_change(id):
     """确认变动记录"""
-    result = change_record_service.confirm_change(id)
+    result = current_app.change_record_service.confirm_change(id)
     return make_response(data=result)
 
 @change_record_bp.route('/<int:id>/reject', methods=['POST'])
@@ -58,7 +57,7 @@ def reject_change(id):
             error={"message": "拒绝原因不能为空"}
         )
     
-    result = change_record_service.reject_change(id, data['reason'])
+    result = current_app.change_record_service.reject_change(id, data['reason'])
     return make_response(data=result)
 
 @change_record_bp.route('/search', methods=['GET'])
@@ -72,5 +71,5 @@ def search_records():
             error={"message": "搜索关键词不能为空"}
         )
     
-    records = change_record_service.search_records(keyword)
+    records = current_app.change_record_service.search_records(keyword)
     return make_response(data=records)

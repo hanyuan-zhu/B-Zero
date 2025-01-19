@@ -1,16 +1,18 @@
 from datetime import datetime
 from typing import Dict, List, Optional
-from sqlalchemy import desc, asc
-from app import db
-from app.models import Employee, Department, Project, ChangeRecord
+from sqlalchemy import desc, asc, and_, or_
+from ..extensions import db
+from ..models import Employee
+from app.models import Department, Project, ChangeRecord
 from sqlalchemy.exc import SQLAlchemyError
+from . import BaseService, ServiceException
 
-class EmployeeServiceException(Exception):
+class EmployeeServiceException(ServiceException):
     pass
 
-class EmployeeService:
+class EmployeeService(BaseService):
     def __init__(self):
-        self.model = Employee
+        super().__init__(Employee)
     
     def _validate_employee_data(self, data: Dict) -> None:
         """验证员工数据"""
@@ -19,6 +21,34 @@ class EmployeeService:
         if missing_fields:
             raise EmployeeServiceException(f"Missing required fields: {', '.join(missing_fields)}")
     
+    def _build_filters(self, filters: Dict) -> List:
+        """构建过滤器列表"""
+        filter_conditions = []
+        
+        if filters:
+            if filters.get('keyword'):
+                keyword = f"%{filters['keyword']}%"
+                filter_conditions.append(
+                    or_(
+                        Employee.name.like(keyword),
+                        Employee.position.like(keyword)
+                    )
+                )
+            
+            if filters.get('department_id') is not None:
+                filter_conditions.append(Employee.department_id == filters['department_id'])
+                
+            if filters.get('project_id') is not None:
+                filter_conditions.append(Employee.project_id == filters['project_id'])
+                
+            if filters.get('start_date'):
+                filter_conditions.append(Employee.join_date >= filters['start_date'])
+                
+            if filters.get('end_date'):
+                filter_conditions.append(Employee.join_date <= filters['end_date'])
+                
+        return filter_conditions
+
     def get_employees(
         self, 
         page: int = 1, 
@@ -28,49 +58,29 @@ class EmployeeService:
         filters: Dict = None
     ):
         """获取员工列表"""
-        try:
+        def query_operation():
             query = self.model.query
-
+            
             # 应用过滤条件
-            if filters:
-                if 'keyword' in filters:
-                    keyword = f"%{filters['keyword']}%"
-                    query = query.filter(
-                        (Employee.name.like(keyword)) |
-                        (Employee.position.like(keyword))
-                    )
-                if 'department_id' in filters:
-                    query = query.filter_by(department_id=filters['department_id'])
-                if 'project_id' in filters:
-                    query = query.filter_by(project_id=filters['project_id'])
-                if 'start_date' in filters:
-                    query = query.filter(Employee.join_date >= filters['start_date'])
-                if 'end_date' in filters:
-                    query = query.filter(Employee.join_date <= filters['end_date'])
+            filter_conditions = self._build_filters(filters)
+            if filter_conditions:
+                query = query.filter(and_(*filter_conditions))
 
             # 应用排序
-            if order == 'desc':
-                query = query.order_by(desc(getattr(Employee, sort)))
-            else:
-                query = query.order_by(asc(getattr(Employee, sort)))
+            sort_column = getattr(Employee, sort)
+            query = query.order_by(desc(sort_column) if order == 'desc' else asc(sort_column))
 
             # 执行分页
-            pagination = query.paginate(
-                page=page, 
-                per_page=limit,
-                error_out=False
-            )
-
+            pagination = query.paginate(page=page, per_page=limit, error_out=False)
+            
             return {
                 'items': pagination.items,
                 'total': pagination.total,
                 'pages': pagination.pages,
                 'current_page': page
             }
-
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            raise EmployeeServiceException(f"Database error: {str(e)}")
+            
+        return self._db_operation(query_operation)
 
     def create_employee(self, data: Dict):
         """创建新员工"""
@@ -217,7 +227,6 @@ class EmployeeService:
             previous_department_id = employee.department_id
             
             # 更新员工部门
-            employee.department_id = new_dept_id
             
             # 创建部门调动变动记录
             change_record = ChangeRecord(

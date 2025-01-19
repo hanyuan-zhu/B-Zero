@@ -1,4 +1,4 @@
-from app import db
+from ..extensions import db
 from sqlalchemy.dialects.mysql import ENUM
 
 class ChangeRecord(db.Model):

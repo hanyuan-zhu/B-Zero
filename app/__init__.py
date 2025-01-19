@@ -1,14 +1,9 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 import pymysql
 from sqlalchemy_utils import database_exists, create_database
+from .extensions import db, migrate
 
-# 注册PyMySQL作为MySQL驱动
 pymysql.install_as_MySQLdb()
-
-db = SQLAlchemy()
-migrate = Migrate()
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -29,7 +24,21 @@ def create_app(config_name=None):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.routes import employee_routes  # 修改导入路径
-    app.register_blueprint(employee_routes.bp)
+    # 导入并注册所有蓝图
+    from app import routes
+    routes.init_app(app)
+
+    # 延迟导入和初始化服务
+    with app.app_context():
+        from .services import (
+            EmployeeService, 
+            DepartmentService, 
+            ProjectService,
+            ChangeRecordService
+        )
+        app.employee_service = EmployeeService()
+        app.department_service = DepartmentService()
+        app.project_service = ProjectService()
+        app.change_record_service = ChangeRecordService()
 
     return app
