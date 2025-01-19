@@ -1,10 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import MainNavigation from '@/components/MainNavigation'
-import { Sidebar } from '@/components/Sidebar'
-import { Breadcrumb } from '@/components/Breadcrumb'
-import { usePathname } from 'next/navigation'
+import { PathAwareLayout } from '@/components/PathAwareLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,30 +15,13 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const pathname = usePathname()
-
-  // Simple permission check (replace with actual auth logic)
-  const isAdmin = true // This should be determined by your authentication system
-  const restrictedPaths = ['/bonus-deduction-management']
-
-  if (restrictedPaths.includes(pathname) && !isAdmin) {
-    return <div>您没有权限访问此页面</div>
-  }
-
   return (
     <html lang="zh">
       <body className={inter.className}>
         <div className="min-h-screen bg-gray-100">
-          <MainNavigation />
-          <div className="flex">
-            <Sidebar />
-            <main className="flex-1 p-6">
-              <Breadcrumb />
-              <div className="mt-4">
-                {children}
-              </div>
-            </main>
-          </div>
+          <PathAwareLayout>
+            {children}
+          </PathAwareLayout>
         </div>
       </body>
     </html>

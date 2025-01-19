@@ -10,11 +10,15 @@ pymysql.install_as_MySQLdb()
 db = SQLAlchemy()
 migrate = Migrate()
 
-def create_app():
+def create_app(config_name=None):
     app = Flask(__name__)
     
-    # 使用pymysql作为MySQL驱动
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123321@localhost/bzero'
+    # 根据配置名称设置不同的配置
+    if config_name == 'testing':
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123321@localhost/bzero'
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123321@localhost/bzero'
+    
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # 检查数据库是否存在，不存在则创建
@@ -25,7 +29,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.routes import personnel_routes
-    app.register_blueprint(personnel_routes.bp)
+    from app.routes import employee_routes  # 修改导入路径
+    app.register_blueprint(employee_routes.bp)
 
     return app

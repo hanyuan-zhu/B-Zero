@@ -7,4 +7,5 @@ project_bp = Blueprint('project', __name__, url_prefix='/api/projects')
 change_record_bp = Blueprint('change_record', __name__, url_prefix='/api/change-records')
 
 # 导入路由模块
+from .employee_routes import *  # 导入 employee_routes
 from . import employee_routes, department_routes, project_routes, change_record_routes
